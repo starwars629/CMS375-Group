@@ -1,3 +1,5 @@
 # CMS375-Group
 
-Andrew, Ethan, and Mauricio
+Ethan - frontend
+Andrew - backend
+Mauricio - database
