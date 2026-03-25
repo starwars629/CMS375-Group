@@ -1,10 +1,10 @@
 from flask import request, jsonify
 
 def require_auth(f):
-    return True
+    return
 
 def require_role(f):
-    return True
+    return
 
 def get_current_user():
     return request.currect_user
