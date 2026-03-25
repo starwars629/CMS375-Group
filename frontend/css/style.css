@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #1a56db;
-  --primary-dark: #1240a8;
+  --primary: #2a4a7f;
+  --primary-dark: #1e3a63;
   --primary-light: #e1eafe;
   --bg: #f3f4f6;
   --surface: #ffffff;
@@ -65,7 +65,7 @@ ol {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a56db 0%, #1e3a8a 100%);
+  background: #1e293b;
   padding: 16px;
 }
 

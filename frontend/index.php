@@ -7,8 +7,7 @@ require_once 'includes/header.php';
 <div class="login-page">
     <div class="login-card">
         <div class="login-header">
-            <h1>LibraryMS</h1>
-            <p>Library Management System</p>
+            <h1>Library Management System</h1>
         </div>
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
