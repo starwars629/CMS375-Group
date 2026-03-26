@@ -4,6 +4,117 @@ from utils.database import execute_query
 
 bp = Blueprint('books', __name__, url_prefix='/api/books')
 
+# ----------------
+# GET /api/books - List/Search books
+# ----------------
+@bp.route('', methods=['GET'])
+def get_books():
+    """
+    Get list of books with optional filters
+
+    GET /api/books
+    GET /api/books?query=harry
+    GET /api/books?genre=fiction
+    GET /api/books?available=true
+    GET /api/books?limit=10
+    GET /api/books?offset=1
+
+    Query Parameters: 
+    - query: Search term for title, author, or ISBN
+    - genre: Filter by genre
+    - available: Filter by availability
+    - limit: Maximum results (default 50)
+    - offset: For pages (default 0)
+
+    Returns:
+    200: List of books
+    500: Database error
+    """
+
+    # Get query parameters
+    search_query = request.args.get('query', '').strip().capitalize()
+    genre_filter = request.args.get('genre', '').strip().capitalize()
+    available_filter = request.args.get('available', '').strip.lower()
+    limit = int(request.args.get('limit', 50))
+    offset = int(request.args.get('offset', 0))
+
+    # Build SQL query based on dynamic filters
+    query = "SELECT * FROM books WHERE 1=1"
+    params = []
+
+    # Add search filter
+    if search_query:
+        query += " AND (title LIKE %s OR author LIKE %s OR ISBN LIKE %s)"
+        search_term = f"%{search_query}%"
+        params.extend([search_term, search_term, search_term])
+    
+    # Add genre filter
+    if genre_filter:
+        query += " AND genre = %s"
+        params.append(genre_filter)
+
+    # Add availability filter
+    if available_filter == 'true':
+        query += ' AND available_copies > 0'
+
+    # Add ordering
+    query += ' ORDER BY title ASC'
+    
+    # Add pages
+    query += ' LIMIT %s OFFSET %s'
+    params.extend([limit, offset])
+
+    # Execute query
+    try:
+        books = execute_query(query, tuple(params))
+
+        if books is None:
+            books = []
+        
+        return jsonify({
+            'books': books,
+            'count': len(books),
+            'limit': limit,
+            'offset': offset
+        }), 200
+    except Exception as e:
+        print(f'Error fetching books: {e}')
+        return jsonify({'error': 'Failed to fetch books'}), 500
+
+# ----------------
+# GET /api/books/{id} - Get a single book
+# ----------------
+@bp.route('/<int:book_id>', methods=['GET'])
+def get_book(book_id):
+    """
+    Get details of a single book
+
+    GET /api/books/1
+
+    Returns:
+    200: Book details
+    404: Book not found
+    500: Database error
+    """
+
+    try:
+        book = execute_query(
+            "SELECT * FROM books WHERE book_id = %s",
+            (book_id,),
+            fetch_one=True
+        )
+
+        if not book:
+            return jsonify({'error': 'Book not found'}), 404
+        
+        return jsonify(book), 200
+    except Exception as e:
+        print(f'Error fetching book {e}')
+        return jsonify({'error': 'Failed to fetch book'}), 500
+
+# ----------------
+# POST /api/books - Add a book
+# ----------------
 @bp.route('', methods=['POST'])
 #@require_auth               # Must be logged in
 #@require_role('librarian')  # Must be a librarian
