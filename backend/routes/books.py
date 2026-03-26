@@ -34,7 +34,7 @@ def get_books():
     # Get query parameters
     search_query = request.args.get('query', '').strip().capitalize()
     genre_filter = request.args.get('genre', '').strip().capitalize()
-    available_filter = request.args.get('available', '').strip.lower()
+    available_filter = request.args.get('available', '').strip().lower()
     limit = int(request.args.get('limit', 50))
     offset = int(request.args.get('offset', 0))
 
