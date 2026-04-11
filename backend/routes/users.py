@@ -40,14 +40,14 @@ def get_my_profile():
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
-    stats = execute_query({"""
+    stats = execute_query("""
         SELECT 
             COUNT(CASE WHEN status IN ('active', 'overdue') THEN 1 END) AS currently_borrowed
             COUNT(CASE WHEN status = 'overdue' THEN 1 END) AS overdue_books
             COUNT(*) as total_books_borrowed
         FROM Loans
         WHERE user_id = %s
-    """, (user_id,) fetch_one=True})
+    """, (user_id,), fetch_one=True)
 
     reservations = execute_query("""
         SELECT COUNT(*) as pending_reservations
@@ -68,7 +68,7 @@ def get_my_profile():
 # GET /api/users/{user_id} - Get User Profile
 # =======================
 
-@bp.route('/<int: user_id>', methods=['GET'])
+@bp.route('/<int:user_id>', methods=['GET'])
 @require_auth
 def get_user(user_id):
     """
@@ -301,7 +301,7 @@ def list_users():
 # PUT /api/users/{user_id}/role - Change user role (admin)
 # ==================================
 
-@bp.route('/<int user_id>/role', methods=['PUT'])
+@bp.route('/<int:user_id>/role', methods=['PUT'])
 @require_auth
 @require_role('admin')
 def change_user_role(user_id):
@@ -357,7 +357,7 @@ def change_user_role(user_id):
 # GET /api/users/{user_id}/activity - Get User activity (Librarian/Admin)
 # ===================================
 
-@bp.route('/<int user_id>/activity', methods=['GET'])
+@bp.route('/<int:user_id>/activity', methods=['GET'])
 @require_auth
 @require_role('librarian', 'admin')
 def get_user_activity(user_id):
