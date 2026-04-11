@@ -12,7 +12,7 @@ def init_db():
         host = 'localhost', 
         user = 'root',
         password = '', 
-        database = 'library_db'
+        database = 'libraryDB'
     )
 
 def get_db():

@@ -20,7 +20,97 @@
 
 ## Authentication
 
-TBD
+### Register
+
+**POST** '/api/auth/register
+
+**Request**
+```json
+{
+  "name": "John Doe",
+  "email": "John@example.com",
+  "password": "SecurePass123"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Account created successfully",
+  "user_id": 42
+}
+```
+
+**Errors:**
+- `400` - Validation error
+- `409` - Account already exists with credentials
+- `500` - Database connection error
+
+### Login
+
+**POST** '/api/auth/login
+
+**Request:**
+```json
+{
+  "email": "john@example.com",
+  "password": "SecurePass123
+}
+```
+
+**Response (200):**
+```json
+{
+  "token": $token,
+  "user": user
+}
+```
+
+**Response (401):**
+```json
+{
+  "error": "Invalid credentials"
+}
+```
+### Logout
+
+**POST** '/api/auth/register
+
+🔒 **Requires:** Authentication
+
+**Example:**
+```
+```
+
+**Response (200):**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+### Change Password
+
+**POST** '/api/auth/register
+
+🔒 **Requires:** authentication
+
+**Request:**
+```
+  "current_password": "oldPass123"
+  "new_password": "newSecurePass456"
+```
+
+**Response (200):**
+```json
+{
+  "message": "Password changed successfully"
+}
+```
+
+**Errors:**
+- `400` - Data validation error
+- `401` - Incorrect password
 
 ---
 
@@ -38,7 +128,7 @@ TBD
 
 **Example:**
 ```
-GET /api/books?query=harry&genre=Fiction
+GET /api/books?query=harry&genre=Fantasy
 ```
 
 **Response (200):**
