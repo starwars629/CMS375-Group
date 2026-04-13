@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from utils.auth import require_auth, require_role, optional_auth
+from utils.auth import require_auth, require_role, optional_auth, get_current_user
 from utils.database import execute_query
 
 bp = Blueprint('books', __name__, url_prefix='/api/books')
@@ -23,11 +23,12 @@ def get_books():
     - query: Search term for title, author, or ISBN
     - genre: Filter by genre
     - available: Filter by availability
-    - limit: Maximum results (default 50)
+    - limit: Maximum results (default 50, max 200)
     - offset: For pages (default 0)
 
     Returns:
     200: List of books
+    400: Invalid limit/offset
     500: Database error
     """
 
@@ -35,8 +36,13 @@ def get_books():
     search_query = request.args.get('query', '').strip()
     genre_filter = request.args.get('genre', '').strip()
     available_filter = request.args.get('available', '').strip().lower()
-    limit = int(request.args.get('limit', 50))
-    offset = int(request.args.get('offset', 0))
+
+    # FIX: Validate and bound limit/offset to prevent abuse and crashes
+    try:
+        limit = min(int(request.args.get('limit', 50)), 200)
+        offset = max(int(request.args.get('offset', 0)), 0)
+    except ValueError:
+        return jsonify({'error': 'limit and offset must be integers'}), 400
 
     # Build SQL query based on dynamic filters
     query = "SELECT * FROM books WHERE 1=1"
@@ -48,7 +54,6 @@ def get_books():
         search_term = f"%{search_query}%"
         params.extend([search_term, search_term, search_term])
     
-    # Add genre filter
     if genre_filter:
         query += " AND genre = %s"
         params.append(genre_filter)
@@ -131,7 +136,6 @@ def add_book():
     403: Not a librarian
     409: ISBN already exists
     """
-    # 1. Get data from request
     data = request.json
 
     # Validate required fields
@@ -151,29 +155,35 @@ def add_book():
     
     if len(errors) != 0:
         return jsonify({'error': errors}), 400
-    
-    # Validate that book does not exist already
-    existing_book = execute_query(
-        "SELECT book_id FROM books WHERE ISBN = %s",
-        (data['bookIsbn'],),
-        fetch_one = True
-    )
 
-    if existing_book:
-        return jsonify({'error': 'Book with this ISBN already exists'}), 409
-    
-    # Validate formatting
+    # Validate ISBN format before uniqueness check
     isbn = data['bookIsbn'].replace('-', '').replace(' ', '')
     if not (len(isbn) == 10 or len(isbn) == 13):
         return jsonify({'error': 'Invalid ISBN format. Must be 10 or 13 digits'}), 400
-    
-    if data['total_copies'] < 1:
+
+    # FIX: was data['total_copies'] which doesn't exist — field is 'bookCopies'
+    try:
+        book_copies = int(data['bookCopies'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Number of copies must be an integer'}), 400
+
+    if book_copies < 1:
         return jsonify({'error': 'Total copies must be at least 1'}), 400
 
-    # 2. Insert data into database
+    # Validate that book does not exist already
+    existing_book = execute_query(
+        "SELECT book_id FROM books WHERE ISBN = %s",
+        (isbn,),
+        fetch_one=True
+    )
+    if existing_book:
+        return jsonify({'error': 'Book with this ISBN already exists'}), 409
+
+    # FIX: Column list had 7 columns but 9 values were passed (subject and location
+    # were included as values but missing from the column list). Now both are explicit.
     query = """
-            INSERT INTO books (ISBN, title, author, category, publishing_year, total_copies, available_copies)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO books (ISBN, title, author, genre, subject, publishing_year, total_copies, available_copies, location)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     try:
@@ -181,26 +191,26 @@ def add_book():
             isbn,
             data['bookTitle'],
             data['bookAuthor'],
-            data['bookGenre'],
-            None,               # subject
+            data['bookGenre'],      # stored in 'genre' column
+            None,                   # subject (optional, not in request body)
             data['bookYear'],
-            data['bookCopies'],
-            data['bookCopies'], # available copies = initial total_copies
-            None                # location  
+            book_copies,            # total_copies
+            book_copies,            # available_copies = initial total
+            None                    # location (optional, not in request body)
         ))
 
-        # 3. Return response
         if book_id:
-            # log action
-            print(f"Book added: {isbn} (ID: {book_id}) by {request.current_user['name']}")
+            # FIX: was request.current_user which doesn't exist — use get_current_user()
+            current_user = get_current_user()
+            print(f"Book added: {isbn} (ID: {book_id}) by {current_user['name']}")
 
-            return jsonify ({
+            return jsonify({
                 'message': 'Book added successfully',
                 'book_id': book_id
             }), 201
         else:
             return jsonify({'error': 'Failed to add book'}), 500
-    
+
     except Exception as e:
         print(f"Error adding book: {e}")
         return jsonify({'error': 'Database error occurred'}), 500
