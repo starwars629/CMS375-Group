@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from datetime import datetime
 from flask_cors import CORS
 from routes import auth, books, fines, loans, reservations, users
 from utils.database import init_db
@@ -151,13 +152,44 @@ def home():
             },
             
             'loans': {
-                'status': 'Coming soon'
+                'checkout': {
+                    'method': 'POST',
+                    'path': '/api/loans/checkout',
+                    'auth_required': True,
+                    'description': 'Check out a book'
+                },
+                'return': {
+                    'method': 'POST',
+                    'path': '/api/loans/{loan_id}/return',
+                    'auth_required': True,
+                    'description': 'Return a checked out book'
+                },
+                'renew': {
+                    'method': 'POST',
+                    'path': '/api/loans/{loan_id}/renew',
+                    'auth_required': True,
+                    'description': 'Renew an active loan'
+                },
+                'active_loans': {
+                    'method': 'GET',
+                    'path': '/api/loans/active',
+                    'auth_required': True,
+                    'role_required': 'librarian',
+                    'description': 'Get all active loans'
+                },
+                'overdue_loans': {
+                    'method': 'GET',
+                    'path': '/api/loans/overdue',
+                    'auth_required': True,
+                    'role_required': 'librarian',
+                    'description': 'Get all overdue loans'
+                }
             },
-            
+
             'reservations': {
                 'status': 'Coming soon'
             },
-            
+
             'fines': {
                 'status': 'Coming soon'
             }
@@ -278,6 +310,49 @@ def api_docs():
                         'auth': True,
                         'role': 'librarian',
                         'description': 'Add new book (librarian only)'
+                    }
+                ]
+            },
+            {
+                'category': 'Loans',
+                'base_path': '/api/loans',
+                'endpoints': [
+                    {
+                        'name': 'Checkout Book',
+                        'method': 'POST',
+                        'path': '/checkout',
+                        'auth': True,
+                        'description': 'Check out a book'
+                    },
+                    {
+                        'name': 'Return Book',
+                        'method': 'POST',
+                        'path': '/{loan_id}/return',
+                        'auth': True,
+                        'description': 'Return a checked out book'
+                    },
+                    {
+                        'name': 'Renew Loan',
+                        'method': 'POST',
+                        'path': '/{loan_id}/renew',
+                        'auth': True,
+                        'description': 'Renew an active loan'
+                    },
+                    {
+                        'name': 'Active Loans',
+                        'method': 'GET',
+                        'path': '/active',
+                        'auth': True,
+                        'role': 'librarian',
+                        'description': 'Get all active loans'
+                    },
+                    {
+                        'name': 'Overdue Loans',
+                        'method': 'GET',
+                        'path': '/overdue',
+                        'auth': True,
+                        'role': 'librarian',
+                        'description': 'Get all overdue loans'
                     }
                 ]
             },
@@ -426,7 +501,7 @@ def health():
         'status': 'healthy',
         'service': 'Library Management System API',
         'version': '1.0.0',
-        'timestamp': '2026-04-11'
+        'timestamp': datetime.utcnow().isoformat()
     }), 200
 
 if __name__ == '__main__':

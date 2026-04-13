@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import require_auth, require_role, get_current_user, get_current_user_id, get_current_user_role
 from utils.database import execute_query
-from datatime import date, timedelta
+from datetime import date, timedelta
 
 bp = Blueprint('loans', __name__, url_prefix='/api/loans')
 
