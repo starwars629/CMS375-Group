@@ -187,7 +187,31 @@ def home():
             },
 
             'reservations': {
-                'status': 'Coming soon'
+                'create_reservation': {
+                    'method': 'POST',
+                    'path': '/api/reservations',
+                    'auth_required': True,
+                    'description': 'Create a reservation for an unavailable book'
+                },
+                'get_user_reservations': {
+                    'method': 'GET',
+                    'path': '/api/reservations/user/{user_id}',
+                    'auth_required': True,
+                    'description': 'Get a user\'s reservations',
+                    'params': ['status']
+                },
+                'cancel_reservation': {
+                    'method': 'PUT',
+                    'path': '/api/reservations/{reservation_id}/cancel',
+                    'auth_required': True,
+                    'description': 'Cancel a pending reservation'
+                },
+                'get_book_queue': {
+                    'method': 'GET',
+                    'path': '/api/reservations/book/{book_id}',
+                    'auth_required': True,
+                    'description': 'Get reservation queue for a book (full details for librarian/admin, count only for others)'
+                }
             },
 
             'fines': {
@@ -379,6 +403,41 @@ def api_docs():
                         'auth': True,
                         'role': 'librarian',
                         'description': 'Get all overdue loans'
+                    }
+                ]
+            },
+            {
+                'category': 'Reservations',
+                'base_path': '/api/reservations',
+                'endpoints': [
+                    {
+                        'name': 'Create Reservation',
+                        'method': 'POST',
+                        'path': '',
+                        'auth': True,
+                        'description': 'Reserve an unavailable book'
+                    },
+                    {
+                        'name': 'Get User Reservations',
+                        'method': 'GET',
+                        'path': '/user/{user_id}',
+                        'auth': True,
+                        'description': 'Get a user\'s reservations',
+                        'query_params': ['status']
+                    },
+                    {
+                        'name': 'Cancel Reservation',
+                        'method': 'PUT',
+                        'path': '/{reservation_id}/cancel',
+                        'auth': True,
+                        'description': 'Cancel a pending reservation'
+                    },
+                    {
+                        'name': 'Get Book Queue',
+                        'method': 'GET',
+                        'path': '/book/{book_id}',
+                        'auth': True,
+                        'description': 'Get reservation queue (full details for librarian/admin, count only for others)'
                     }
                 ]
             },

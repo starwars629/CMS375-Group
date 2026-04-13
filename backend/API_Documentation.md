@@ -741,13 +741,282 @@ Authorization: Bearer {token}
 
 ## Reservations
 
-**Status:** To Be Implemented
+### Create Reservation
 
-Planned endpoints:
-- `POST /api/reservations` - Create a reservation
-- `GET /api/reservations/user/{user_id}` - Get user's reservations
-- `PUT /api/reservations/{reservation_id}/cancel` - Cancel a reservation
-- `GET /api/reservations/book/{book_id}` - Get reservation queue for a book
+**POST** `/api/reservations`
+
+🔒 **Requires:** Authentication
+
+Creates a reservation for a book that has no available copies. Cannot reserve a book
+that is currently available — check it out directly instead.
+
+**Reservation Limits by Role:**
+| Role | Max Active Reservations |
+|------|------------------------|
+| Student | 1 |
+| Faculty | 3 |
+| Librarian | 3 |
+| Admin | 3 |
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "book_id": 1
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "message": "Reservation created successfully",
+  "reservation_id": 1,
+  "book_id": 1,
+  "title": "Clean Code",
+  "reservation_date": "2026-04-13",
+  "status": "pending"
+}
+```
+
+**Error Responses:**
+
+**400 - Missing Field:**
+```json
+{ "error": "book_id is required" }
+```
+
+**400 - Book Available:**
+```json
+{ "error": "This book is currently available. You can check it out directly." }
+```
+
+**400 - Already Reserved:**
+```json
+{ "error": "You already have a pending reservation for this book" }
+```
+
+**400 - Limit Reached:**
+```json
+{ "error": "Reservation limit reached. Students may have at most 1 active reservation." }
+```
+
+**404 - Book Not Found:**
+```json
+{ "error": "Book not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to create reservation" }
+```
+
+---
+
+### Get User Reservations
+
+**GET** `/api/reservations/user/{user_id}`
+
+🔒 **Requires:** Authentication (users can only view their own reservations unless librarian/admin)
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| status | string | No | Filter by status (`pending`, `fulfilled`, `cancelled`) |
+
+**Example Requests:**
+```bash
+# Get all reservations
+GET /api/reservations/user/1
+
+# Get pending only
+GET /api/reservations/user/1?status=pending
+
+# Get cancelled
+GET /api/reservations/user/1?status=cancelled
+```
+
+**Success Response (200):**
+```json
+{
+  "user_id": 1,
+  "reservations": [
+    {
+      "reservation_id": 1,
+      "reservation_date": "2026-04-13",
+      "status": "pending",
+      "book_id": 1,
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "ISBN": "978-0132350884",
+      "available_copies": 0
+    },
+    {
+      "reservation_id": 2,
+      "reservation_date": "2026-03-01",
+      "status": "fulfilled",
+      "book_id": 2,
+      "title": "Design Patterns",
+      "author": "Gang of Four",
+      "ISBN": "978-0201633610",
+      "available_copies": 1
+    }
+  ],
+  "count": 2
+}
+```
+
+**Error Responses:**
+
+**403 - Forbidden:**
+```json
+{ "error": "You can only view your own reservations" }
+```
+
+**404 - User Not Found:**
+```json
+{ "error": "User not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to fetch reservations" }
+```
+
+---
+
+### Cancel Reservation
+
+**PUT** `/api/reservations/{reservation_id}/cancel`
+
+🔒 **Requires:** Authentication (users can only cancel their own reservations unless librarian/admin)
+
+Only pending reservations can be cancelled.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Example Request:**
+```bash
+PUT /api/reservations/1/cancel
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "Reservation cancelled successfully",
+  "reservation_id": 1
+}
+```
+
+**Error Responses:**
+
+**400 - Not Pending:**
+```json
+{ "error": "Only pending reservations can be cancelled" }
+```
+
+**403 - Forbidden:**
+```json
+{ "error": "You can only cancel your own reservations" }
+```
+
+**404 - Not Found:**
+```json
+{ "error": "Reservation not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to cancel reservation" }
+```
+
+---
+
+### Get Book Reservation Queue
+
+**GET** `/api/reservations/book/{book_id}`
+
+🔒 **Requires:** Authentication
+
+Response varies by role:
+- **Librarian/Admin:** Full queue with borrower details, ordered oldest first
+- **Student/Faculty:** Queue length only — no personal details of other users
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Example Request:**
+```bash
+GET /api/reservations/book/1
+```
+
+**Success Response (200) — Student/Faculty:**
+```json
+{
+  "book_id": 1,
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "available_copies": 0,
+  "queue_length": 3
+}
+```
+
+**Success Response (200) — Librarian/Admin:**
+```json
+{
+  "book_id": 1,
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "available_copies": 0,
+  "queue": [
+    {
+      "reservation_id": 1,
+      "reservation_date": "2026-04-01",
+      "status": "pending",
+      "user_id": 3,
+      "borrower_name": "Alice Johnson",
+      "borrower_email": "alice@university.edu",
+      "role": "student"
+    },
+    {
+      "reservation_id": 2,
+      "reservation_date": "2026-04-05",
+      "status": "pending",
+      "user_id": 7,
+      "borrower_name": "Bob Smith",
+      "borrower_email": "bob@university.edu",
+      "role": "faculty"
+    }
+  ],
+  "queue_length": 2
+}
+```
+
+**Error Responses:**
+
+**404 - Book Not Found:**
+```json
+{ "error": "Book not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to fetch reservation queue" }
+```
 
 ---
 
