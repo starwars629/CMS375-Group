@@ -21,7 +21,9 @@
 ## Authentication
 
 Most endpoints require authentication via JWT token:
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 ### Register
 
@@ -41,7 +43,7 @@ Create a new user account.
 **Success Response (201):**
 ```json
 {
-  "message": "Account created successfully",
+  "message": "User created successfully",
   "user_id": 42
 }
 ```
@@ -91,7 +93,7 @@ Authenticates user and receive JWT token.
 ```json
 {
   "email": "john@example.com",
-  "password": "SecurePass123
+  "password": "SecurePass123"
 }
 ```
 
@@ -130,14 +132,16 @@ Authenticates user and receive JWT token.
 
 ### Logout
 
-**POST** '/api/auth/register
+**POST** '/api/auth/logout
 
 🔒 **Requires:** Authentication
 
 Logout current user (client should delete token).
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Success Response (200):**
 ```json
@@ -159,19 +163,23 @@ Authorization: Bearer <token>
 
 ### Change Password
 
-**POST** '/api/auth/register
+**POST** '/api/auth/change-password
 
 🔒 **Requires:** authentication
 
 Change current user's password.
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Request:**
-```
+```json
+{
   "current_password": "oldPass123"
   "new_password": "newSecurePass456"
+}
 ```
 
 **Response (200):**
@@ -347,8 +355,10 @@ GET /api/books/1
 🔒 **Requires:** Librarian authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
 Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -445,14 +455,287 @@ curl -X POST http://localhost:5000/api/books \
 
 ## Loans
 
-**Status:** To Be Implemented
+### Checkout Book
 
-Planned endpoints:
-- `POST /api/loans/checkout` - Check out a book
-- `POST /api/loans/{loan_id}/return` - Return a book
-- `POST /api/loans/{loan_id}/renew` - Renew a loan
-- `GET /api/loans/active` - Get all active loans
-- `GET /api/loans/overdue` - Get all overdue loans
+**POST** `/api/loans/checkout`
+
+🔒 **Requires:** Authentication
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "book_id": 1
+}
+```
+
+**Loan Periods by Role:**
+| Role | Loan Period |
+|------|-------------|
+| Student | 14 days |
+| Faculty | 30 days |
+| Librarian | 30 days |
+| Admin | 30 days |
+
+**Success Response (201):**
+```json
+{
+  "message": "Book checked out successfully",
+  "loan_id": 1,
+  "book_id": 1,
+  "title": "Clean Code",
+  "checkout_date": "2026-04-13",
+  "due_date": "2026-04-27"
+}
+```
+
+**Error Responses:**
+
+**400 - Missing Field:**
+```json
+{ "error": "book_id is required" }
+```
+
+**400 - No Copies Available:**
+```json
+{ "error": "No copies available" }
+```
+
+**400 - Already Borrowed:**
+```json
+{ "error": "You already have this book checked out" }
+```
+
+**404 - Book Not Found:**
+```json
+{ "error": "Book not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Checkout failed" }
+```
+
+---
+
+### Return Book
+
+**POST** `/api/loans/{loan_id}/return`
+
+🔒 **Requires:** Authentication (users can only return their own loans unless librarian/admin)
+
+If the book is returned late, a fine of **$1.00/day** is automatically generated and added to the user's account.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Success Response (200) — On time:**
+```json
+{
+  "message": "Book returned successfully",
+  "loan_id": 1,
+  "title": "Clean Code",
+  "return_date": "2026-04-27"
+}
+```
+
+**Success Response (200) — Overdue:**
+```json
+{
+  "message": "Book returned successfully",
+  "loan_id": 1,
+  "title": "Clean Code",
+  "return_date": "2026-05-01",
+  "fine": {
+    "fine_id": 3,
+    "days_overdue": 4,
+    "amount": 4.00,
+    "message": "A fine of $4.00 has been added to your account"
+  }
+}
+```
+
+**Error Responses:**
+
+**400 - Not Active:**
+```json
+{ "error": "This loan is not active" }
+```
+
+**403 - Forbidden:**
+```json
+{ "error": "You can only return your own loans" }
+```
+
+**404 - Not Found:**
+```json
+{ "error": "Loan not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Return failed" }
+```
+
+---
+
+### Renew Loan
+
+**POST** `/api/loans/{loan_id}/renew`
+
+🔒 **Requires:** Authentication (users can only renew their own loans unless librarian/admin)
+
+Extends the due date by the user's full loan period from the current due date. Overdue loans cannot be renewed.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "Loan renewed successfully",
+  "loan_id": 1,
+  "title": "Clean Code",
+  "old_due_date": "2026-04-27",
+  "new_due_date": "2026-05-11"
+}
+```
+
+**Error Responses:**
+
+**400 - Not Active:**
+```json
+{ "error": "Only active loans can be renewed" }
+```
+
+**400 - Overdue:**
+```json
+{ "error": "Overdue loans cannot be renewed. Please return the book and pay the fine." }
+```
+
+**403 - Forbidden:**
+```json
+{ "error": "You can only renew your own loans" }
+```
+
+**404 - Not Found:**
+```json
+{ "error": "Loan not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Renewal failed" }
+```
+
+---
+
+### Get Active Loans
+
+**GET** `/api/loans/active`
+
+🔒 **Requires:** Librarian or Admin authentication
+
+Returns all loans with status `active` or `overdue`.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Success Response (200):**
+```json
+{
+  "loans": [
+    {
+      "loan_id": 1,
+      "checkout_date": "2026-04-01",
+      "due_date": "2026-04-15",
+      "status": "active",
+      "user_id": 3,
+      "borrower_name": "Alice Johnson",
+      "borrower_email": "alice@university.edu",
+      "book_id": 1,
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "ISBN": "978-0132350884",
+      "days_overdue": -2
+    }
+  ],
+  "count": 1
+}
+```
+
+**Error Responses:**
+
+**403 - Forbidden:**
+```json
+{ "error": "Access denied. Required roles: librarian or admin" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to fetch active loans" }
+```
+
+---
+
+### Get Overdue Loans
+
+**GET** `/api/loans/overdue`
+
+🔒 **Requires:** Librarian or Admin authentication
+
+Returns all loans that are past their due date, along with days overdue and the accrued fine amount.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Success Response (200):**
+```json
+{
+  "loans": [
+    {
+      "loan_id": 2,
+      "checkout_date": "2026-03-10",
+      "due_date": "2026-03-24",
+      "user_id": 5,
+      "borrower_name": "Bob Smith",
+      "borrower_email": "bob@university.edu",
+      "book_id": 2,
+      "title": "Design Patterns",
+      "author": "Gang of Four",
+      "ISBN": "978-0201633610",
+      "days_overdue": 20,
+      "accrued_fine": 20.00
+    }
+  ],
+  "count": 1
+}
+```
+
+**Error Responses:**
+
+**403 - Forbidden:**
+```json
+{ "error": "Access denied. Required roles: librarian or admin" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to fetch overdue loans" }
+```
 
 ---
 
@@ -491,7 +774,9 @@ Get current authenticated user's profile with statistics.
 🔒 **Requires:** Authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Example Request:**
 ```bash
@@ -544,7 +829,9 @@ Get user profile information.
 🔒 **Requires:** Authentication (users can only view own profile unless librarian/admin)
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **URL Parameters:**
 | Parameter | Type | Required | Description |
@@ -602,8 +889,10 @@ Update user profile information.
 🔒 **Requires:** Authentication (users can only update own profile)
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
 Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -688,7 +977,9 @@ Get a list of all users with optional filters (Librarian/Admin only).
 🔒 **Requires:** Librarian or Admin authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Query Parameters:**
 | Parameter | Type | Required | Description |
@@ -776,8 +1067,10 @@ Change a user's role (Admin only).
 🔒 **Requires:** Admin authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
 Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -852,7 +1145,9 @@ Get user's complete activity history (Librarian/Admin only).
 🔒 **Requires:** Librarian or Admin authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Example Request:**
 ```bash
@@ -941,7 +1236,9 @@ Delete a user account (Admin only).
 🔒 **Requires:** Admin authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Example Request:**
 ```bash
@@ -993,7 +1290,9 @@ Get overall user statistics (Admin only).
 🔒 **Requires:** Admin authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Example Request:**
 ```bash
@@ -1036,7 +1335,9 @@ Get all users with unpaid fines (Librarian/Admin only).
 🔒 **Requires:** Librarian or Admin authentication
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Example Request:**
 ```bash
@@ -1085,7 +1386,9 @@ Get user's loan history with optional status filter.
 🔒 **Requires:** Authentication (users can only view own loans unless librarian/admin)
 
 **Headers:**
-Authorization: Bearer <token>
+```
+Authorization: Bearer {token}
+```
 
 **Query Parameters:**
 | Parameter | Type | Required | Description |
