@@ -405,10 +405,10 @@ def get_user_activity(user_id):
             f.issued_at,
             f.paid_at,
             f.paid_status,
-            b.title AS book_title
+            b.title AS book_title,
             b.author AS book_author
         FROM Fines f 
-            JOIN Loans l ON f.load_Id = l.load_id
+            JOIN Loans l ON f.load_id = l.load_id
             JOIN Books b ON l.book_id = b.book_id
         WHERE f.user_id = %s
         ORDER BY f.issued_at DESC

@@ -753,13 +753,253 @@ Planned endpoints:
 
 ## Fines
 
-**Status:** To Be Implemented
+### Get User Fines
 
-Planned endpoints:
-- `GET /api/fines/user/{user_id}` - Get user's fines
-- `POST /api/fines/{fine_id}/pay` - Pay a fine
-- `POST /api/fines/{fine_id}/waive` - Waive a fine (Librarian only)
-- `GET /api/fines/outstanding` - Get all outstanding fines
+**GET** `/api/fines/user/{user_id}`
+
+🔒 **Requires:** Authentication (users can only view their own fines unless librarian/admin)
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| status | string | No | Filter by paid status (`paid`, `unpaid`) |
+
+**Example Requests:**
+```bash
+# Get all fines
+GET /api/fines/user/1
+
+# Get unpaid fines only
+GET /api/fines/user/1?status=unpaid
+
+# Get paid fines only
+GET /api/fines/user/1?status=paid
+```
+
+**Success Response (200):**
+```json
+{
+  "user_id": 1,
+  "fine_balance": 5.00,
+  "fines": [
+    {
+      "fine_id": 1,
+      "amount": 4.00,
+      "issued_at": "2026-04-10",
+      "paid_at": null,
+      "paid_status": "unpaid",
+      "book_title": "Clean Code",
+      "book_author": "Robert C. Martin",
+      "ISBN": "978-0132350884"
+    },
+    {
+      "fine_id": 2,
+      "amount": 1.00,
+      "issued_at": "2026-03-15",
+      "paid_at": "2026-03-20",
+      "paid_status": "paid",
+      "book_title": "Design Patterns",
+      "book_author": "Gang of Four",
+      "ISBN": "978-0201633610"
+    }
+  ],
+  "count": 2
+}
+```
+
+**Error Responses:**
+
+**403 - Forbidden:**
+```json
+{ "error": "You can only view your own fines" }
+```
+
+**404 - User Not Found:**
+```json
+{ "error": "User not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to fetch fines" }
+```
+
+---
+
+### Pay Fine
+
+**POST** `/api/fines/{fine_id}/pay`
+
+🔒 **Requires:** Authentication (users can only pay their own fines unless librarian/admin)
+
+Marks a fine as paid and deducts the amount from the user's fine balance. No real payment
+processing — billing is handled externally.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Example Request:**
+```bash
+POST /api/fines/1/pay
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "Fine paid successfully",
+  "fine_id": 1,
+  "amount_paid": 4.00,
+  "paid_at": "2026-04-13"
+}
+```
+
+**Error Responses:**
+
+**400 - Already Paid:**
+```json
+{ "error": "This fine has already been paid" }
+```
+
+**403 - Forbidden:**
+```json
+{ "error": "You can only pay your own fines" }
+```
+
+**404 - Not Found:**
+```json
+{ "error": "Fine not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Payment failed" }
+```
+
+---
+
+### Waive Fine
+
+**POST** `/api/fines/{fine_id}/waive`
+
+🔒 **Requires:** Librarian or Admin authentication
+
+Waives an unpaid fine, removing it from the user's balance without payment. Waived fines
+are recorded separately from paid fines for reporting purposes.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Example Request:**
+```bash
+POST /api/fines/1/waive
+```
+
+**Success Response (200):**
+```json
+{
+  "message": "Fine waived successfully",
+  "fine_id": 1,
+  "amount_waived": 4.00,
+  "waived_at": "2026-04-13"
+}
+```
+
+**Error Responses:**
+
+**400 - Not Unpaid:**
+```json
+{ "error": "Only unpaid fines can be waived" }
+```
+
+**403 - Forbidden:**
+```json
+{ "error": "Access denied. Required roles: librarian or admin" }
+```
+
+**404 - Not Found:**
+```json
+{ "error": "Fine not found" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to waive fine" }
+```
+
+---
+
+### Get Outstanding Fines
+
+**GET** `/api/fines/outstanding`
+
+🔒 **Requires:** Librarian or Admin authentication
+
+Returns all unpaid fines across all users, ordered oldest first, with a grand total.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Example Request:**
+```bash
+GET /api/fines/outstanding
+```
+
+**Success Response (200):**
+```json
+{
+  "fines": [
+    {
+      "fine_id": 1,
+      "amount": 4.00,
+      "issued_at": "2026-04-01",
+      "paid_status": "unpaid",
+      "user_id": 3,
+      "borrower_name": "Alice Johnson",
+      "borrower_email": "alice@university.edu",
+      "book_title": "Clean Code",
+      "book_author": "Robert C. Martin",
+      "ISBN": "978-0132350884"
+    },
+    {
+      "fine_id": 2,
+      "amount": 7.00,
+      "issued_at": "2026-04-05",
+      "paid_status": "unpaid",
+      "user_id": 5,
+      "borrower_name": "Bob Smith",
+      "borrower_email": "bob@university.edu",
+      "book_title": "Design Patterns",
+      "book_author": "Gang of Four",
+      "ISBN": "978-0201633610"
+    }
+  ],
+  "count": 2,
+  "total_outstanding": 11.00
+}
+```
+
+**Error Responses:**
+
+**403 - Forbidden:**
+```json
+{ "error": "Access denied. Required roles: librarian or admin" }
+```
+
+**500 - Server Error:**
+```json
+{ "error": "Failed to fetch outstanding fines" }
+```
 
 ---
 

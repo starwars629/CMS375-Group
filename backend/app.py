@@ -191,7 +191,33 @@ def home():
             },
 
             'fines': {
-                'status': 'Coming soon'
+                'get_user_fines': {
+                    'method': 'GET',
+                    'path': '/api/fines/user/{user_id}',
+                    'auth_required': True,
+                    'description': 'Get a user\'s fines',
+                    'params': ['status']
+                },
+                'pay_fine': {
+                    'method': 'POST',
+                    'path': '/api/fines/{fine_id}/pay',
+                    'auth_required': True,
+                    'description': 'Mark a fine as paid'
+                },
+                'waive_fine': {
+                    'method': 'POST',
+                    'path': '/api/fines/{fine_id}/waive',
+                    'auth_required': True,
+                    'role_required': 'librarian',
+                    'description': 'Waive a fine (librarian/admin only)'
+                },
+                'outstanding_fines': {
+                    'method': 'GET',
+                    'path': '/api/fines/outstanding',
+                    'auth_required': True,
+                    'role_required': 'librarian',
+                    'description': 'Get all outstanding fines (librarian/admin only)'
+                }
             }
         },
         
@@ -353,6 +379,43 @@ def api_docs():
                         'auth': True,
                         'role': 'librarian',
                         'description': 'Get all overdue loans'
+                    }
+                ]
+            },
+            {
+                'category': 'Fines',
+                'base_path': '/api/fines',
+                'endpoints': [
+                    {
+                        'name': 'Get User Fines',
+                        'method': 'GET',
+                        'path': '/user/{user_id}',
+                        'auth': True,
+                        'description': 'Get a user\'s fines',
+                        'query_params': ['status']
+                    },
+                    {
+                        'name': 'Pay Fine',
+                        'method': 'POST',
+                        'path': '/{fine_id}/pay',
+                        'auth': True,
+                        'description': 'Mark a fine as paid'
+                    },
+                    {
+                        'name': 'Waive Fine',
+                        'method': 'POST',
+                        'path': '/{fine_id}/waive',
+                        'auth': True,
+                        'role': 'librarian',
+                        'description': 'Waive a fine (librarian/admin only)'
+                    },
+                    {
+                        'name': 'Outstanding Fines',
+                        'method': 'GET',
+                        'path': '/outstanding',
+                        'auth': True,
+                        'role': 'librarian',
+                        'description': 'Get all outstanding fines (librarian/admin only)'
                     }
                 ]
             },
