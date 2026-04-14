@@ -1,17 +1,12 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import require_auth, get_current_user, get_current_user_id, get_current_user_role
 from utils.database import execute_query
+from config import RESERVATION_LIMITS
 from datetime import date
 
 bp = Blueprint('reservations', __name__, url_prefix='/api/reservations')
 
-# Maximum active reservations per role
-RESERVATION_LIMITS = {
-    'student': 1,
-    'faculty': 3,
-    'librarian': 3,
-    'admin': 3
-}
+# RESERVATION_LIMITS is imported from config.py
 
 
 # ----------------

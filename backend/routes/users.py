@@ -41,9 +41,9 @@ def get_my_profile():
         return jsonify({'error': 'User not found'}), 404
     
     stats = execute_query("""
-        SELECT 
-            COUNT(CASE WHEN status IN ('active', 'overdue') THEN 1 END) AS currently_borrowed
-            COUNT(CASE WHEN status = 'overdue' THEN 1 END) AS overdue_books
+        SELECT
+            COUNT(CASE WHEN status IN ('active', 'overdue') THEN 1 END) AS currently_borrowed,
+            COUNT(CASE WHEN status = 'overdue' THEN 1 END) AS overdue_books,
             COUNT(*) as total_books_borrowed
         FROM Loans
         WHERE user_id = %s
@@ -249,18 +249,18 @@ def list_users():
             u.email,
             u.role,
             u.fine_balance,
-            u.create_at,
-            COUNT(CASE WHEN l.status IN ('active', 'overdue') THEN l END) as active_loans
-            COUNT(CASE WHEN l.status = 'overdue' THEN l END) as overdue_books\
-        FROM Users u 
-            LEFT JOIN loans l ON u.user_id = l.user_id
+            u.created_at,
+            COUNT(CASE WHEN l.status IN ('active', 'overdue') THEN 1 END) as active_loans,
+            COUNT(CASE WHEN l.status = 'overdue' THEN 1 END) as overdue_books
+        FROM Users u
+            LEFT JOIN Loans l ON u.user_id = l.user_id
         WHERE 1=1
             """
     params = []
 
     if search:
         query += " AND (u.name LIKE %s OR u.email LIKE %s)"
-        search_term = f"%{search}"
+        search_term = f"%{search}%"
         params.extend([search_term, search_term])
     
     if role_filter:
@@ -270,7 +270,7 @@ def list_users():
     if has_fines == 'true':
         query += " AND u.fine_balance > 0"
     elif has_fines == 'false':
-        query += " AND u.fines_balance = 0"
+        query += " AND u.fine_balance = 0"
 
     # Group by and order
     query += """
@@ -408,7 +408,7 @@ def get_user_activity(user_id):
             b.title AS book_title,
             b.author AS book_author
         FROM Fines f 
-            JOIN Loans l ON f.load_id = l.load_id
+            JOIN Loans l ON f.loan_id = l.loan_id
             JOIN Books b ON l.book_id = b.book_id
         WHERE f.user_id = %s
         ORDER BY f.issued_at DESC
@@ -427,7 +427,7 @@ def get_user_activity(user_id):
             JOIN Books b ON r.book_id = b.book_id
         WHERE r.user_id = %s AND r.status = 'pending'
         ORDER BY r.reservation_date DESC
-    """, (user_id,), fetch_all=True)
+    """, (user_id,))
 
     reading_list = execute_query("""
         SELECT 
@@ -578,7 +578,7 @@ def get_users_with_fines():
             total_owed
         FROM UnpaidFines
         ORDER BY total_owed DESC
-    """, fetch_all=True)
+    """)
     
     if users_with_fines is None:
         users_with_fines = []
@@ -641,7 +641,7 @@ def get_user_loans(user_id):
         elif status_filter == 'active':
             query += " AND days_overdue <= 0"
         
-        loans = execute_query(query, (user_id,), fetch_all=True)
+        loans = execute_query(query, (user_id,))
     else:
         # Get all loans
         query = """
@@ -662,9 +662,9 @@ def get_user_loans(user_id):
 
         if status_filter:
             query += " AND l.status = %s"
-            loans = execute_query(query, (user_id, status_filter), fetch_all=True)
+            loans = execute_query(query, (user_id, status_filter))
         else:
-            loans = execute_query(query, (user_id,), fetch_all=True)
+            loans = execute_query(query, (user_id,))
     
     if loans is None:
         loans = []

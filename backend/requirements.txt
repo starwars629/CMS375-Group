@@ -1,4 +1,7 @@
 Flask==2.3.0
+Werkzeug==2.3.7
 flask-cors==4.0.0
 mysql-connector-python==8.0.33
 PyJWT==2.8.0
+bcrypt==4.1.2
+pytest==8.1.1

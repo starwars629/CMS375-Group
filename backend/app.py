@@ -3,6 +3,7 @@ from datetime import datetime
 from flask_cors import CORS
 from routes import auth, books, fines, loans, reservations, users
 from utils.database import init_db
+from config import DEBUG, PORT
 
 app = Flask(__name__)
 CORS(app)   # Allow frontend to connect
@@ -103,7 +104,7 @@ def home():
                     'method': 'GET',
                     'path': '/api/users',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'List all users with filters',
                     'params': ['search', 'role', 'has_fines', 'limit', 'offset']
                 },
@@ -118,7 +119,7 @@ def home():
                     'method': 'GET',
                     'path': '/api/users/{user_id}/activity',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'Get user activity history'
                 },
                 'delete_user': {
@@ -139,7 +140,7 @@ def home():
                     'method': 'GET',
                     'path': '/api/users/with-fines',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'Get users with unpaid fines'
                 },
                 'user_loans': {
@@ -174,14 +175,14 @@ def home():
                     'method': 'GET',
                     'path': '/api/loans/active',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'Get all active loans'
                 },
                 'overdue_loans': {
                     'method': 'GET',
                     'path': '/api/loans/overdue',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'Get all overdue loans'
                 }
             },
@@ -232,14 +233,14 @@ def home():
                     'method': 'POST',
                     'path': '/api/fines/{fine_id}/waive',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'Waive a fine (librarian/admin only)'
                 },
                 'outstanding_fines': {
                     'method': 'GET',
                     'path': '/api/fines/outstanding',
                     'auth_required': True,
-                    'role_required': 'librarian',
+                    'role_required': 'librarian or admin',
                     'description': 'Get all outstanding fines (librarian/admin only)'
                 }
             }
@@ -393,7 +394,7 @@ def api_docs():
                         'method': 'GET',
                         'path': '/active',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'Get all active loans'
                     },
                     {
@@ -401,7 +402,7 @@ def api_docs():
                         'method': 'GET',
                         'path': '/overdue',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'Get all overdue loans'
                     }
                 ]
@@ -465,7 +466,7 @@ def api_docs():
                         'method': 'POST',
                         'path': '/{fine_id}/waive',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'Waive a fine (librarian/admin only)'
                     },
                     {
@@ -473,7 +474,7 @@ def api_docs():
                         'method': 'GET',
                         'path': '/outstanding',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'Get all outstanding fines (librarian/admin only)'
                     }
                 ]
@@ -508,7 +509,7 @@ def api_docs():
                         'method': 'GET',
                         'path': '',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'List all users (librarian only)'
                     },
                     {
@@ -524,7 +525,7 @@ def api_docs():
                         'method': 'GET',
                         'path': '/{user_id}/activity',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'Get user activity history'
                     },
                     {
@@ -548,7 +549,7 @@ def api_docs():
                         'method': 'GET',
                         'path': '/with-fines',
                         'auth': True,
-                        'role': 'librarian',
+                        'role': 'librarian or admin',
                         'description': 'List users with unpaid fines'
                     },
                     {
@@ -607,7 +608,6 @@ def api_docs():
                     'bookTitle': 'Clean Code',
                     'bookAuthor': 'Robert C. Martin',
                     'bookGenre': 'Technology',
-                    'bookYear': 2008,
                     'bookCopies': 3
                 }
             }
@@ -647,4 +647,4 @@ if __name__ == '__main__':
     print("Press CTRL+C to quit")
     print("=" * 60 + "\n")
     
-    app.run(debug=True, port=5000)
+    app.run(debug=DEBUG, port=PORT)

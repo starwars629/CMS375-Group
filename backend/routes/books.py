@@ -148,8 +148,6 @@ def add_book():
         errors += '| Author is required'
     if not data.get('bookGenre'):
         errors += '| Genre is required'
-    if not data.get('bookYear'):
-        errors += '| Publishing year is required'
     if not data.get('bookCopies'):
         errors += '| Number of copies is required'
     
@@ -182,8 +180,8 @@ def add_book():
     # FIX: Column list had 7 columns but 9 values were passed (subject and location
     # were included as values but missing from the column list). Now both are explicit.
     query = """
-        INSERT INTO books (ISBN, title, author, genre, subject, publishing_year, total_copies, available_copies, location)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO books (ISBN, title, author, genre, subject, total_copies, available_copies, location)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     try:
@@ -193,7 +191,6 @@ def add_book():
             data['bookAuthor'],
             data['bookGenre'],      # stored in 'genre' column
             None,                   # subject (optional, not in request body)
-            data['bookYear'],
             book_copies,            # total_copies
             book_copies,            # available_copies = initial total
             None                    # location (optional, not in request body)

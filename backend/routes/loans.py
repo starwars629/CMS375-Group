@@ -1,19 +1,12 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import require_auth, require_role, get_current_user, get_current_user_id, get_current_user_role
 from utils.database import execute_query
+from config import LOAN_PERIODS, FINE_RATE_PER_DAY
 from datetime import date, timedelta
 
 bp = Blueprint('loans', __name__, url_prefix='/api/loans')
 
-# Loan period in days per role
-LOAN_PERIODS = {
-    'student': 14,
-    'faculty': 30,
-    'librarian': 30,
-    'admin': 30
-}
-
-FINE_RATE_PER_DAY = 1.00  # $1.00/day
+# LOAN_PERIODS and FINE_RATE_PER_DAY are imported from config.py
  
 def get_due_date(role):
     """Calculate due date based on user role."""

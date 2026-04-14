@@ -27,7 +27,7 @@ Authorization: Bearer {token}
 
 ### Register
 
-**POST** '/api/auth/register
+**POST** `/api/auth/register`
 
 Create a new user account.
 
@@ -85,7 +85,7 @@ Create a new user account.
 
 ### Login
 
-**POST** '/api/auth/login
+**POST** `/api/auth/login`
 
 Authenticates user and receive JWT token.
 
@@ -132,7 +132,7 @@ Authenticates user and receive JWT token.
 
 ### Logout
 
-**POST** '/api/auth/logout
+**POST** `/api/auth/logout`
 
 ðŸ”’ **Requires:** Authentication
 
@@ -163,7 +163,7 @@ Authorization: Bearer {token}
 
 ### Change Password
 
-**POST** '/api/auth/change-password
+**POST** `/api/auth/change-password`
 
 ðŸ”’ **Requires:** authentication
 
@@ -177,7 +177,7 @@ Authorization: Bearer {token}
 **Request:**
 ```json
 {
-  "current_password": "oldPass123"
+  "current_password": "oldPass123",
   "new_password": "newSecurePass456"
 }
 ```
@@ -367,7 +367,6 @@ Content-Type: application/json
   "bookTitle": "1984",
   "bookAuthor": "George Orwell",
   "bookGenre": "Fiction",
-  "bookYear": 1949,
   "bookCopies": 5
 }
 ```
@@ -377,7 +376,6 @@ Content-Type: application/json
 - `bookTitle` (string) - Book title
 - `bookAuthor` (string) - Book author
 - `bookGenre` (string) - Book genre
-- `bookYear` (integer) - Publication year
 - `bookCopies` (integer) - Number of copies (minimum 1)
 
 **Example Request:**
@@ -390,7 +388,6 @@ curl -X POST http://localhost:5000/api/books \
     "bookTitle": "1984",
     "bookAuthor": "George Orwell",
     "bookGenre": "Fiction",
-    "bookYear": 1949,
     "bookCopies": 5
   }'
 ```
@@ -1916,7 +1913,7 @@ GET /api/users/1/loans?status=active
 GET /api/users/1/loans?status=overdue
 ```
 
-**Success Response (200):**
+**Success Response (200) — No filter or :**
 ```json
 {
   "loans": [
@@ -1930,20 +1927,28 @@ GET /api/users/1/loans?status=overdue
       "author": "Robert C. Martin",
       "ISBN": "978-0132350884",
       "days_overdue": -14
-    },
+    }
+  ],
+  "count": 1
+}
+```
+
+**Success Response (200) —  or ** (uses ActiveLoans view, different fields):
+```json
+{
+  "loans": [
     {
       "loan_id": 2,
+      "name": "Alice Johnson",
+      "email": "alice@university.edu",
+      "title": "Design Patterns",
+      "ISBN": "978-0201633610",
       "checkout_date": "2026-03-10",
       "due_date": "2026-03-24",
-      "return_date": null,
-      "status": "overdue",
-      "title": "Design Patterns",
-      "author": "Gang of Four",
-      "ISBN": "978-0201633610",
       "days_overdue": 18
     }
   ],
-  "count": 2
+  "count": 1
 }
 ```
 
@@ -2031,7 +2036,6 @@ curl -X POST http://localhost:5000/api/books \
     "bookTitle": "Head First Design Patterns",
     "bookAuthor": "Eric Freeman",
     "bookGenre": "Technology",
-    "bookYear": 2004,
     "bookCopies": 4
   }'
 

@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import pooling
+from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_POOL_SIZE
 
 # Connection pool for performance
 connection_pool = None
@@ -8,11 +9,11 @@ def init_db():
     global connection_pool
     connection_pool = mysql.connector.pooling.MySQLConnectionPool(
         pool_name = 'library_pool',
-        pool_size = 5,
-        host = 'localhost', 
-        user = 'root',
-        password = '', 
-        database = 'libraryDB'
+        pool_size = DB_POOL_SIZE,
+        host = DB_HOST,
+        user = DB_USER,
+        password = DB_PASSWORD,
+        database = DB_NAME
     )
 
 def get_db():

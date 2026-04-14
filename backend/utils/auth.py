@@ -10,6 +10,7 @@ This module provides decorators and helper functions for:
 
 import bcrypt
 import jwt
+from config import SECRET_KEY, TOKEN_EXPIRATION_HOURS, VALID_ROLES
 from datetime import datetime, timedelta
 from flask import request, jsonify
 from functools import wraps
@@ -18,15 +19,7 @@ from utils.validators import validate_password_strength, validate_email
 # =====================================
 # Configuration
 # =====================================
-
-# THIS SHOULD BE STORED IN AN ENVIRONMENTAL VARIABLE FOLLOWING PRODUCTION
-SECRET_KEY = 'this-is-a-very-secure-key-that-is-at-least-32-bytes-long'
-
-# Token expiration time
-TOKEN_EXPIRATION_HOURS = 24
-
-# Valid user roles
-VALID_ROLES = ['student', 'faculty', 'librarian', 'admin']
+# SECRET_KEY, TOKEN_EXPIRATION_HOURS, and VALID_ROLES are imported from config.py
 
 # =====================================
 # Password Hashing
