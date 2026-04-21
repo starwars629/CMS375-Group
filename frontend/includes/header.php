@@ -8,12 +8,13 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<?php if (basename($_SERVER['PHP_SELF']) !== 'index.php'): ?>
+<?php if (basename($_SERVER['PHP_SELF']) !== 'index.php' && basename($_SERVER['PHP_SELF']) !== 'register.php'): ?>
     <button class="hamburger" onclick="toggleSidebar()" id="hamburger">&#9776;</button>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     <nav class="sidebar">
         <div class="sidebar-logo">
             <h2>Library Management</h2>
+            <p id="currentUserLabel" style="font-size:12px;color:#9ca3af;margin-top:4px;"></p>
         </div>
         <ul class="sidebar-nav">
             <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>">
@@ -22,7 +23,7 @@
             <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'books.php' ? 'active' : ''; ?>">
                 <a href="books.php">Books</a>
             </li>
-            <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'users.php' ? 'active' : ''; ?>">
+            <li data-role="staff" class="<?php echo basename($_SERVER['PHP_SELF']) === 'users.php' ? 'active' : ''; ?>">
                 <a href="users.php">Members</a>
             </li>
             <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'loans.php' ? 'active' : ''; ?>">
@@ -33,6 +34,9 @@
             </li>
             <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'fines.php' ? 'active' : ''; ?>">
                 <a href="fines.php">Fines</a>
+            </li>
+            <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'profile.php' ? 'active' : ''; ?>">
+                <a href="profile.php">Profile</a>
             </li>
         </ul>
         <hr>

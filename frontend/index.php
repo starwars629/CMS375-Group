@@ -22,7 +22,7 @@ require_once 'includes/header.php';
             <button type="submit" class="btn btn-primary btn-block">Sign In</button>
         </form>
         <div class="login-footer">
-            <a href="#" onclick="demoLogin(event)">Demo Login (Skip Authentication)</a>
+            <p style="margin: 8px 0;">Don't have an account? <a href="register.php">Create one</a></p>
         </div>
     </div>
 </div>
@@ -40,19 +40,16 @@ require_once 'includes/header.php';
 
         var result = await apiRequest('/auth/login', 'POST', { email: email, password: password });
 
-        if (result.success) {
+        if (result.ok) {
             setToken(result.data.token);
+            if (result.data.user) {
+                setUser(result.data.user);
+            }
             window.location.href = 'dashboard.php';
         } else {
             errorDiv.textContent = result.error || 'Login failed. Please check your credentials.';
             errorDiv.classList.remove('hidden');
         }
-    }
-
-    function demoLogin(e) {
-        e.preventDefault();
-        setToken('demo-token-123');
-        window.location.href = 'dashboard.php';
     }
 
     if (isLoggedIn()) {

@@ -75,6 +75,25 @@
   </div>
 </div>
 
+<div id="adminStatsGrid" class="stats-grid" data-role="admin" style="display:none;">
+  <div class="stat-card">
+    <div class="stat-value" id="statTotalUsers">--</div>
+    <div class="stat-label">Total Users</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statStudents">--</div>
+    <div class="stat-label">Students</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statFaculty">--</div>
+    <div class="stat-label">Faculty</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statStaff">--</div>
+    <div class="stat-label">Staff (Librarian + Admin)</div>
+  </div>
+</div>
+
 <div class="dashboard-grid">
   <div class="card">
     <div class="card-header">
@@ -85,13 +104,13 @@
         <tr>
           <th>Date</th>
           <th>Action</th>
-          <th>Details</th>
+          <th>Book</th>
           <th>User</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="recentActivityBody">
         <tr>
-          <td colspan="4" style="text-align: center; padding: 24px; color: #6b7280;">No recent activity</td>
+          <td colspan="4" style="text-align: center; padding: 24px; color: #6b7280;">Loading...</td>
         </tr>
       </tbody>
     </table>
@@ -102,16 +121,15 @@
       <h2>Quick Actions</h2>
     </div>
     <div style="display: flex; flex-direction: column; gap: 12px;">
-      <a href="books.php" class="btn btn-primary">Add New Book</a>
-      <a href="users.php" class="btn btn-primary">Register Member</a>
+      <a href="books.php" class="btn btn-primary" data-role="staff">Add New Book</a>
+      <a href="users.php" class="btn btn-primary" data-role="staff">Register Member</a>
       <a href="loans.php" class="btn btn-primary">Process Checkout</a>
       <a href="loans.php" class="btn btn-primary">Process Return</a>
+      <a href="profile.php" class="btn btn-secondary">My Profile</a>
     </div>
   </div>
 </div>
 
-<script>
-  requireAuth();
-</script>
+<script src="js/dashboard.js"></script>
 
 <?php require_once 'includes/footer.php'; ?>
