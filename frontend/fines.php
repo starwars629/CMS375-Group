@@ -19,9 +19,23 @@
   <input type="text" id="fineSearch" class="toolbar-search" placeholder="Search fines...">
   <select id="statusFilter" class="toolbar-filter">
     <option value="">All</option>
-    <option value="Paid">Paid</option>
-    <option value="Unpaid">Unpaid</option>
+    <option value="paid">Paid</option>
+    <option value="unpaid">Unpaid</option>
   </select>
+  <button class="btn btn-secondary" data-role="staff" onclick="showUsersWithFines()">Users With Fines</button>
+</div>
+
+<div class="modal-overlay" id="usersWithFinesModal">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <h3>Users With Outstanding Fines</h3>
+      <button class="modal-close" onclick="hideModal('usersWithFinesModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="usersWithFinesBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideModal('usersWithFinesModal')">Close</button>
+    </div>
+  </div>
 </div>
 
 <div class="card">
@@ -33,11 +47,6 @@
   </table>
 </div>
 
-<script>
-requireAuth();
-
-document.getElementById('finesTableBody').innerHTML =
-  '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7280;">No records found</td></tr>';
-</script>
+<script src="js/fines.js"></script>
 
 <?php require_once 'includes/footer.php'; ?>
