@@ -33,6 +33,9 @@ LOAN_PERIODS = {
     'admin':     30,
 }
 
+# Maximum number of times a single loan may be renewed
+MAX_RENEWALS = 2
+
 # Fine charged per overdue day (in dollars)
 FINE_RATE_PER_DAY = 1.00
 

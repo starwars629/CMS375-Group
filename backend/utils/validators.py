@@ -24,19 +24,13 @@ def validate_password_strength(password):
 
     if len(password) < 8:
         return False, 'Password must be at least 8 characters'
-    
+
     if not any(c.isalpha() for c in password):
         return False, 'Password must contain at least 1 letter'
-    
+
     if not any(c.isdigit() for c in password):
         return False, 'Password must contain at least 1 number'
-    
-    if not any(c.isupper() for c in password):
-        return False, 'Password must contain at least 1 uppercase letter'
-    
-    if not any(c.islower() for c in password):
-        return False, 'Password must contain at least 1 lowercase letter'
-    
+
     return True, ''
 
 def validate_email(email):

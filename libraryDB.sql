@@ -43,14 +43,15 @@ CREATE TABLE Books (
 -- Tracks book checkouts and returns
 -- ============================================================
 CREATE TABLE Loans (
-    loan_id       INT PRIMARY KEY AUTO_INCREMENT,
-    user_id       INT NOT NULL,
-    book_id       INT NOT NULL,
-    checkout_date DATE NOT NULL DEFAULT (CURRENT_DATE),
-    due_date      DATE NOT NULL,
-    return_date   DATE DEFAULT NULL,  -- NULL = not yet returned
-    status        ENUM('active', 'returned', 'overdue') NOT NULL DEFAULT 'active',
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    loan_id        INT PRIMARY KEY AUTO_INCREMENT,
+    user_id        INT NOT NULL,
+    book_id        INT NOT NULL,
+    checkout_date  DATE NOT NULL DEFAULT (CURRENT_DATE),
+    due_date       DATE NOT NULL,
+    return_date    DATE DEFAULT NULL,  -- NULL = not yet returned
+    status         ENUM('active', 'returned', 'overdue') NOT NULL DEFAULT 'active',
+    renewal_count  INT NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE RESTRICT

@@ -221,10 +221,6 @@ function applyRoleGating() {
         if (!isAdminRole) el.style.display = 'none';
     });
 
-    const userLabel = document.getElementById('currentUserLabel');
-    if (userLabel && user) {
-        userLabel.textContent = user.name + ' (' + user.role + ')';
-    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {

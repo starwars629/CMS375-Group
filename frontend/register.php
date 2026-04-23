@@ -20,7 +20,7 @@ require_once 'includes/header.php';
             </div>
             <div class="form-group">
                 <label for="regPassword">Password</label>
-                <input type="password" id="regPassword" placeholder="Min 8 chars, upper+lower+digit" required>
+                <input type="password" id="regPassword" placeholder="Min 8 chars, letter + digit" required>
             </div>
             <div class="form-group">
                 <label for="regPasswordConfirm">Confirm Password</label>

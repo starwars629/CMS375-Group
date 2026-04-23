@@ -14,7 +14,6 @@
     <nav class="sidebar">
         <div class="sidebar-logo">
             <h2>Library Management</h2>
-            <p id="currentUserLabel" style="font-size:12px;color:#9ca3af;margin-top:4px;"></p>
         </div>
         <ul class="sidebar-nav">
             <li class="<?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>">

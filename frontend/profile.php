@@ -51,7 +51,7 @@
         </div>
         <div class="form-group">
           <label for="newPw">New Password</label>
-          <input type="password" id="newPw" placeholder="Min 8 chars, upper+lower+digit" required>
+          <input type="password" id="newPw" placeholder="Min 8 chars, letter + digit" required>
         </div>
         <div class="form-group">
           <label for="confirmPw">Confirm New Password</label>

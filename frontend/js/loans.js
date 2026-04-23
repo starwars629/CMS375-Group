@@ -112,7 +112,11 @@
     window.renewLoan = async function (loanId) {
         const result = await apiRequest('/loans/' + loanId + '/renew', 'POST');
         if (result.ok) {
-            showNotification('Renewed. New due date: ' + result.data.new_due_date, 'success');
+            let msg = 'Renewed. New due date: ' + result.data.new_due_date;
+            if (result.data.renewal_count && result.data.max_renewals) {
+                msg += ' (' + result.data.renewal_count + '/' + result.data.max_renewals + ' renewals used)';
+            }
+            showNotification(msg, 'success');
             loadLoans();
         } else {
             showNotification(result.error || 'Renewal failed', 'error');

@@ -46,7 +46,7 @@
                 </div>
                 <div class="form-group">
                     <label for="userPassword">Password</label>
-                    <input type="password" id="userPassword" placeholder="Min 8 chars, upper+lower+digit" required>
+                    <input type="password" id="userPassword" placeholder="Min 8 chars, letter + digit" required>
                 </div>
             </form>
         </div>

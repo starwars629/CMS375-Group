@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import require_auth, require_role, get_current_user, get_current_user_id, get_current_user_role
 from utils.database import execute_query
-from config import LOAN_PERIODS, FINE_RATE_PER_DAY
+from config import LOAN_PERIODS, FINE_RATE_PER_DAY, MAX_RENEWALS
 from datetime import date, timedelta
 
 bp = Blueprint('loans', __name__, url_prefix='/api/loans')
@@ -214,7 +214,7 @@ def renew_loan(loan_id):
     role = get_current_user_role()
  
     loan = execute_query("""
-        SELECT l.loan_id, l.user_id, l.due_date, l.status, b.title
+        SELECT l.loan_id, l.user_id, l.due_date, l.status, l.renewal_count, b.title
         FROM Loans l
             JOIN books b ON l.book_id = b.book_id
         WHERE l.loan_id = %s
@@ -232,6 +232,9 @@ def renew_loan(loan_id):
     # Cannot renew if overdue
     if date.today() > loan['due_date']:
         return jsonify({'error': 'Overdue loans cannot be renewed. Please return the book and pay the fine.'}), 400
+
+    if loan['renewal_count'] >= MAX_RENEWALS:
+        return jsonify({'error': f'This loan has already been renewed {MAX_RENEWALS} times and cannot be renewed again.'}), 400
  
     # Extend due date from current due date (not from today)
     extension_days = LOAN_PERIODS.get(role, 14)
@@ -239,7 +242,7 @@ def renew_loan(loan_id):
  
     try:
         execute_query("""
-            UPDATE Loans SET due_date = %s WHERE loan_id = %s
+            UPDATE Loans SET due_date = %s, renewal_count = renewal_count + 1 WHERE loan_id = %s
         """, (new_due_date, loan_id))
  
         return jsonify({
@@ -247,7 +250,9 @@ def renew_loan(loan_id):
             'loan_id': loan_id,
             'title': loan['title'],
             'old_due_date': loan['due_date'].isoformat(),
-            'new_due_date': new_due_date.isoformat()
+            'new_due_date': new_due_date.isoformat(),
+            'renewal_count': loan['renewal_count'] + 1,
+            'max_renewals': MAX_RENEWALS
         }), 200
  
     except Exception as e:
