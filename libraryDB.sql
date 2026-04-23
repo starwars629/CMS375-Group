@@ -13,8 +13,9 @@ CREATE TABLE Users (
     email         VARCHAR(150) NOT NULL UNIQUE,
     password      VARCHAR(255) NOT NULL,  -- store hashed passwords only
     role          ENUM('student', 'faculty', 'librarian', 'admin') NOT NULL DEFAULT 'student',
-    fine_balance  DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fine_balance       DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    total_fines_paid   DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================================
@@ -66,7 +67,7 @@ CREATE TABLE Fines (
     amount      DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     paid_status ENUM('unpaid', 'paid', 'waived') NOT NULL DEFAULT 'unpaid',
     issued_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    paid_at     TIMESTAMP DEFAULT NULL,
+    paid_at     TIMESTAMP NULL DEFAULT NULL,
 
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (loan_id) REFERENCES Loans(loan_id) ON DELETE CASCADE

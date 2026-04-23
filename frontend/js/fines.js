@@ -32,11 +32,8 @@
             result = await apiRequest('/fines/user/' + user.user_id + qs, 'GET');
             if (result.ok) {
                 allFines = result.data.fines || [];
-                let paid = 0, unpaid = 0;
-                for (let i = 0; i < allFines.length; i++) {
-                    if (allFines[i].paid_status === 'paid') paid += Number(allFines[i].amount) || 0;
-                    else unpaid += Number(allFines[i].amount) || 0;
-                }
+                const paid = Number(result.data.total_fines_paid) || 0;
+                const unpaid = Number(result.data.fine_balance) || 0;
                 updateStats({ total: paid + unpaid, paid: paid, unpaid: unpaid });
             }
         }

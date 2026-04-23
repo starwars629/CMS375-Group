@@ -37,7 +37,7 @@ def get_user_fines(user_id):
 
     # Check user exists
     user = execute_query(
-        "SELECT user_id, name, fine_balance FROM Users WHERE user_id = %s",
+        "SELECT user_id, name, fine_balance, total_fines_paid FROM Users WHERE user_id = %s",
         (user_id,),
         fetch_one=True
     )
@@ -78,6 +78,7 @@ def get_user_fines(user_id):
         return jsonify({
             'user_id': user_id,
             'fine_balance': user['fine_balance'],
+            'total_fines_paid': user['total_fines_paid'],
             'fines': fines,
             'count': len(fines)
         }), 200
@@ -132,11 +133,11 @@ def pay_fine(fine_id):
             WHERE fine_id = %s
         """, (today, fine_id))
 
-        # Deduct from user's fine balance
+        # Deduct from user's fine balance and track total paid
         execute_query("""
-            UPDATE Users SET fine_balance = fine_balance - %s
+            UPDATE Users SET fine_balance = fine_balance - %s, total_fines_paid = total_fines_paid + %s
             WHERE user_id = %s
-        """, (fine['amount'], fine['user_id']))
+        """, (fine['amount'], fine['amount'], fine['user_id']))
 
         return jsonify({
             'message': 'Fine paid successfully',
@@ -189,11 +190,11 @@ def waive_fine(fine_id):
             WHERE fine_id = %s
         """, (today, fine_id))
 
-        # Remove amount from user's fine balance
+        # Remove amount from user's fine balance and track total paid
         execute_query("""
-            UPDATE Users SET fine_balance = fine_balance - %s
+            UPDATE Users SET fine_balance = fine_balance - %s, total_fines_paid = total_fines_paid + %s
             WHERE user_id = %s
-        """, (fine['amount'], fine['user_id']))
+        """, (fine['amount'], fine['amount'], fine['user_id']))
 
         return jsonify({
             'message': 'Fine waived successfully',
