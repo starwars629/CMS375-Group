@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from utils.auth import require_auth, require_role, optional_auth, get_current_user
 from utils.database import execute_query
+from utils.validators import sanitize_text
 
 bp = Blueprint('books', __name__, url_prefix='/api/books')
 
@@ -33,8 +34,8 @@ def get_books():
     """
 
     # Get query parameters
-    search_query = request.args.get('query', '').strip()
-    genre_filter = request.args.get('genre', '').strip()
+    search_query = sanitize_text(request.args.get('query', ''), max_length=120)
+    genre_filter = sanitize_text(request.args.get('genre', ''), max_length=100)
     available_filter = request.args.get('available', '').strip().lower()
 
     # FIX: Validate and bound limit/offset to prevent abuse and crashes
@@ -154,8 +155,13 @@ def add_book():
     if len(errors) != 0:
         return jsonify({'error': errors}), 400
 
+    # Sanitize user-controlled fields before validation/storage.
+    safe_title = sanitize_text(data['bookTitle'], max_length=255)
+    safe_author = sanitize_text(data['bookAuthor'], max_length=150)
+    safe_genre = sanitize_text(data['bookGenre'], max_length=100)
+
     # Validate ISBN format before uniqueness check
-    isbn = data['bookIsbn'].replace('-', '').replace(' ', '')
+    isbn = sanitize_text(data['bookIsbn'], max_length=20).replace('-', '').replace(' ', '')
     if not (len(isbn) == 10 or len(isbn) == 13):
         return jsonify({'error': 'Invalid ISBN format. Must be 10 or 13 digits'}), 400
 
@@ -187,9 +193,9 @@ def add_book():
     try:
         book_id = execute_query(query, (
             isbn,
-            data['bookTitle'],
-            data['bookAuthor'],
-            data['bookGenre'],      # stored in 'genre' column
+            safe_title,
+            safe_author,
+            safe_genre,             # stored in 'genre' column
             None,                   # subject (optional, not in request body)
             book_copies,            # total_copies
             book_copies,            # available_copies = initial total

@@ -10,6 +10,7 @@ from utils.auth import (
     get_current_user
 
 )
+from utils.validators import sanitize_text
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 @bp.route('/register', methods=['POST'])
@@ -38,8 +39,11 @@ def register():
     if len(errors) != 0:
         return jsonify({'error': errors}), 400
     
+    sanitized_name = sanitize_text(data['name'], max_length=100)
+    sanitized_email = sanitize_text(data['email'], max_length=150).lower()
+
     # Validate strength and uniqueness
-    if not validate_email(data['email']):
+    if not validate_email(sanitized_email):
         return jsonify({'error': 'Invalid email format'}), 400
 
     valid, error_msg = validate_password_strength(data['password'])
@@ -48,7 +52,7 @@ def register():
 
     existing = execute_query(
         'SELECT user_id FROM Users WHERE email = %s',
-        (data['email'],),
+        (sanitized_email,),
         fetch_one=True
     )
     if existing:
@@ -62,7 +66,7 @@ def register():
         user_id = execute_query("""
             INSERT INTO Users (name, email, password, role, fine_balance)
             VALUES (%s, %s, %s, 'student', 0.00)
-            """, (data['name'], data['email'], hashed_password))
+            """, (sanitized_name, sanitized_email, hashed_password))
         
         return jsonify({'message': 'User created successfully', 'user_id': user_id}), 201
     except Exception as e:
@@ -86,10 +90,12 @@ def login():
     if not data.get('email') or not data.get('password'):
         return jsonify({'error': 'Email and password required'}), 400
     
+    sanitized_email = sanitize_text(data['email'], max_length=150).lower()
+
     # Get user from database
     user = execute_query(
         "SELECT * FROM Users WHERE email = %s",
-        (data['email'],),
+        (sanitized_email,),
         fetch_one=True
     )
 

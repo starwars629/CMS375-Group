@@ -5,6 +5,7 @@ Helper functions for validating user input
 """
 
 import re
+import html
 
 def validate_password_strength(password):
     """
@@ -76,6 +77,30 @@ def validate_phone(phone):
     clean = phone.replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
 
     return clean.isdigit() and len(clean) == 10
+
+
+def sanitize_text(value, max_length=None):
+    """
+    Normalize potentially unsafe text input.
+
+    - Trims surrounding whitespace
+    - Removes HTML tags to reduce stored XSS risk
+    - HTML-unescapes then escapes control markup characters
+    - Optionally enforces max length
+    """
+    if value is None:
+        return ''
+
+    text = str(value).strip()
+    # Remove tags like <script>...</script> while preserving plain content.
+    text = re.sub(r'<[^>]*>', '', text)
+    # Normalize encoded entities and then escape special HTML chars.
+    text = html.escape(html.unescape(text), quote=True)
+
+    if max_length is not None:
+        text = text[:max_length]
+
+    return text
 
 if __name__ == '__main__':
     """Test Validators"""
