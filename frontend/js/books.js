@@ -37,16 +37,17 @@
         let html = '';
         for (let i = 0; i < books.length; i++) {
             const b = books[i];
+            const safeBookId = Number(b.book_id) || 0;
             const available = b.available_copies > 0;
             const statusBadge = available
                 ? '<span class="badge badge-success">' + b.available_copies + '/' + b.total_copies + ' available</span>'
                 : '<span class="badge badge-danger">Unavailable</span>';
 
-            let actions = '<button class="btn btn-sm btn-secondary" onclick="viewBookDetails(' + b.book_id + ')">Details</button>';
+            let actions = '<button class="btn btn-sm btn-secondary" onclick="viewBookDetails(' + safeBookId + ')">Details</button>';
             if (available) {
-                actions += ' <button class="btn btn-sm btn-primary" onclick="checkoutBookFromList(' + b.book_id + ', \'' + escapeJsString(b.title) + '\')">Checkout</button>';
+                actions += ' <button class="btn btn-sm btn-primary" onclick="checkoutBookFromList(' + safeBookId + ', \'' + escapeJsString(b.title) + '\')">Checkout</button>';
             } else {
-                actions += ' <button class="btn btn-sm btn-secondary" onclick="reserveBookFromList(' + b.book_id + ', \'' + escapeJsString(b.title) + '\')">Reserve</button>';
+                actions += ' <button class="btn btn-sm btn-secondary" onclick="reserveBookFromList(' + safeBookId + ', \'' + escapeJsString(b.title) + '\')">Reserve</button>';
             }
 
             html += '<tr>' +

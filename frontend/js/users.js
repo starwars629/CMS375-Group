@@ -41,7 +41,7 @@
 
             let actions = '<button class="btn btn-sm btn-secondary" onclick="viewActivity(' + u.user_id + ')">Activity</button>';
             if (isAdmin()) {
-                actions += ' <button class="btn btn-sm btn-primary" onclick="openRoleChange(' + u.user_id + ', \'' + escapeJs(u.name) + '\', \'' + u.role + '\')">Role</button>';
+                actions += ' <button class="btn btn-sm btn-primary" onclick="openRoleChange(' + u.user_id + ', \'' + escapeJs(u.name) + '\', \'' + escapeJs(u.role) + '\')">Role</button>';
                 actions += ' <button class="btn btn-sm btn-danger" onclick="deleteUser(' + u.user_id + ', \'' + escapeJs(u.name) + '\')">Delete</button>';
             }
 
