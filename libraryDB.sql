@@ -35,7 +35,8 @@ CREATE TABLE Books (
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_copies CHECK (available_copies >= 0),
-    CONSTRAINT chk_total   CHECK (total_copies >= 0)
+    CONSTRAINT chk_total   CHECK (total_copies >= 0),
+    CONSTRAINT chk_available_not_exceed_total CHECK (available_copies <= total_copies)
 );
 
 -- ============================================================
@@ -54,7 +55,10 @@ CREATE TABLE Loans (
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE RESTRICT
+    FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE RESTRICT,
+    INDEX idx_loans_user_id (user_id),
+    INDEX idx_loans_book_id (book_id),
+    INDEX idx_loans_status_due_date (status, due_date)
 );
 
 -- ============================================================
@@ -71,7 +75,10 @@ CREATE TABLE Fines (
     paid_at     TIMESTAMP NULL DEFAULT NULL,
 
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (loan_id) REFERENCES Loans(loan_id) ON DELETE CASCADE
+    FOREIGN KEY (loan_id) REFERENCES Loans(loan_id) ON DELETE CASCADE,
+    CONSTRAINT chk_fine_amount_non_negative CHECK (amount >= 0),
+    UNIQUE KEY uq_fines_loan_id (loan_id),
+    INDEX idx_fines_user_status (user_id, paid_status)
 );
 
 -- ============================================================
@@ -86,7 +93,9 @@ CREATE TABLE Reservations (
     status           ENUM('pending', 'ready', 'fulfilled', 'cancelled') NOT NULL DEFAULT 'pending',
 
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE CASCADE
+    FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE CASCADE,
+    INDEX idx_reservations_book_status_date (book_id, status, reservation_date),
+    INDEX idx_reservations_user_status (user_id, status)
 );
 
 -- ============================================================
@@ -101,7 +110,9 @@ CREATE TABLE ReadingLists (
 
     UNIQUE (user_id, book_id),  -- prevent duplicate entries
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE CASCADE
+    FOREIGN KEY (book_id) REFERENCES Books(book_id) ON DELETE CASCADE,
+    INDEX idx_reading_lists_user (user_id),
+    INDEX idx_reading_lists_book (book_id)
 );
 
 -- ============================================================
@@ -153,10 +164,10 @@ ORDER BY times_borrowed DESC;
 -- ============================================================
 
 INSERT INTO Users (name, email, password, role) VALUES
-('Alice Johnson',  'alice@university.edu',   'hashed_pw_1', 'student'),
-('Bob Smith',      'bob@university.edu',     'hashed_pw_2', 'faculty'),
-('Carol White',    'carol@university.edu',   'hashed_pw_3', 'librarian'),
-('David Admin',    'david@university.edu',   'hashed_pw_4', 'admin');
+('Alice Johnson',  'alice@university.edu',   '$2b$12$w6eVWW08R8vqi4L6yrx7z.JlPo2P6qkqA6vYw9oM2CwNJHf4Q9z9S', 'student'),
+('Bob Smith',      'bob@university.edu',     '$2b$12$7dYHlk4m45X4v5uW7bJHxeV2x8B5/2zQykcGhXANeH3fYf3l5w9yi', 'faculty'),
+('Carol White',    'carol@university.edu',   '$2b$12$Y9UQ8Hw0k2R7MpNQ3RrOdu9j9hYx6vQGQ8Rk6cB4bXhG9G4s6Y6Ty', 'librarian'),
+('David Admin',    'david@university.edu',   '$2b$12$Q2nD9xCcW4nN8LrP5sV0NOPuK6V5qXrY4zM4w5Dg0rP2aXoB3n6mK', 'admin');
 
 INSERT INTO Books (ISBN, title, author, genre, subject, total_copies, available_copies, location) VALUES
 ('978-0132350884', 'Clean Code',                   'Robert C. Martin', 'Technology', 'Software Engineering', 3, 3, 'Section A - Shelf 2'),
