@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from utils.validators import sanitize_text
 from utils.auth import (
     require_auth, 
     require_role,
@@ -157,45 +158,44 @@ def update_user(user_id):
     
     data = request.json
 
+    sanitized_name = sanitize_text(data.get('name'), max_length=100) if data.get('name') else None
+    sanitized_email = sanitize_text(data.get('email'), max_length=150).lower() if data.get('email') else None
+
     # Validate email if provided
-    if data.get('email'):
-        if not validate_email(data['email']):
+    if sanitized_email:
+        if not validate_email(sanitized_email):
             return jsonify({'error': 'Invalid email format'}), 400
 
         # Check if email is currently in use
         existing = execute_query(
             "SELECT user_id FROM Users WHERE email = %s AND user_id != %s",
-            (data['email'], user_id),
+            (sanitized_email, user_id),
             fetch_one=True
         )
 
         if existing:
             return jsonify({'error': 'Email already in use'}), 409
         
-    # Build update query dynamically
-    updates = []
-    params = []
-
-    if data.get('name'):
-        updates.append('name = %s')
-        params.append(data['name'])
-    
-    if data.get('email'):
-        updates.append('email = %s')
-        params.append(data['email'])
-
-    if not updates:
+    if not sanitized_name and not sanitized_email:
         return jsonify({'error': 'No fields to update'}), 400
-    
-    # Add user_id to params
-    params.append(user_id)
 
     # Update user
     try:
-        execute_query(
-            f"UPDATE Users SET {', '.join(updates)} WHERE user_id = %s",
-            tuple(params)
-        )
+        if sanitized_name and sanitized_email:
+            execute_query(
+                "UPDATE Users SET name = %s, email = %s WHERE user_id = %s",
+                (sanitized_name, sanitized_email, user_id)
+            )
+        elif sanitized_name:
+            execute_query(
+                "UPDATE Users SET name = %s WHERE user_id = %s",
+                (sanitized_name, user_id)
+            )
+        else:
+            execute_query(
+                "UPDATE Users SET email = %s WHERE user_id = %s",
+                (sanitized_email, user_id)
+            )
 
         updated_user = execute_query(
             "SELECT user_id, name, email, role, fine_balance FROM Users WHERE user_id = %s",
@@ -235,11 +235,14 @@ def list_users():
     """
 
     # Get query parameters
-    search = request.args.get('search', '').strip()
-    role_filter = request.args.get('role', '').strip()
+    search = sanitize_text(request.args.get('search', ''), max_length=100)
+    role_filter = sanitize_text(request.args.get('role', ''), max_length=20)
     has_fines = request.args.get('has_fines', '').strip()
-    limit = int(request.args.get('limit', 50))
-    offset = int(request.args.get('offset', 0))
+    try:
+        limit = min(int(request.args.get('limit', 50)), 200)
+        offset = max(int(request.args.get('offset', 0)), 0)
+    except ValueError:
+        return jsonify({'error': 'limit and offset must be integers'}), 400
     
     # Build query
     query = """

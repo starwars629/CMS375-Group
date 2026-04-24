@@ -114,6 +114,21 @@ class TestAuthRegister:
             })
         assert r.status_code == 409
 
+    def test_register_sanitizes_name_input(self, client):
+        with patch('routes.auth.execute_query') as mock_q, \
+             patch('routes.auth.hash_password', return_value='hashed_pw'):
+            mock_q.side_effect = [None, 100]
+            r = client.post(self.ROUTE, json={
+                'name': '<script>alert(1)</script>John',
+                'email': 'john@university.edu',
+                'password': 'SecurePass123'
+            })
+        assert r.status_code == 201
+        insert_call = mock_q.call_args_list[1]
+        inserted_name = insert_call.args[1][0]
+        assert '<script>' not in inserted_name
+        assert 'alert(1)' in inserted_name
+
 
 class TestAuthLogin:
     ROUTE = '/api/auth/login'
@@ -652,6 +667,10 @@ class TestUsers:
     def test_list_users_forbidden_for_student(self, client):
         r = client.get('/api/users', headers=auth_header())
         assert r.status_code == 403
+
+    def test_list_users_invalid_pagination(self, client):
+        r = client.get('/api/users?limit=bad', headers=librarian_header())
+        assert r.status_code == 400
 
     def test_change_user_role_admin(self, client):
         with patch('routes.users.execute_query') as mock_q:
